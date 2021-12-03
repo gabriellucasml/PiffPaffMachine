@@ -1,0 +1,7 @@
+<Machine name='PiffPaffMachine' type='abstraction'>
+<Initialisation>
+<Skip/>
+</Initialisation>
+<TypeInfos/>
+
+</Machine>
