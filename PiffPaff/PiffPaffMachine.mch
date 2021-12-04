@@ -4,5 +4,19 @@
  */
 MACHINE
     PiffPaffMachine
+    
+SETS PLAYERS; DECK
+    
+CONSTANTS playerhand
+    
+PROPERTIES playerhand : PLAYERS --> DECK
+    
+VARIABLES
+    
+INVARIANT
+    
+INITIALISATION
+    
+OPERATIONS
 
 END
