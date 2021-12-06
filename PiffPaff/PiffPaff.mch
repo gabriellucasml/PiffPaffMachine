@@ -4,7 +4,7 @@
  */
 MACHINE PiffPaff
     
-SETS BARALHO = {1..108}; DECK1 <: BARALHO ; DECK2 <: BARALHO; MONTE <: BARALHO; LIXEIRA <: BARALHO;  
+SETS BARALHO = {1..108}; DECK1 <: BARALHO; TRINCAS <: POW BARALHO; DECK2 <: BARALHO; MONTE <: BARALHO; LIXEIRA <: BARALHO;  
 
 CONSTANTS PAUS <: BARALHO; COPAS <: BARALHO; OUROS <: BARALHO; ESPADAS <: BARALHO;
 
@@ -37,7 +37,7 @@ INITIALISATION
 OPERATIONS
 
 comprarDoMonte =
-    PRE mm : MONTE
+    ANY mm WHERE mm : MONTE    
     THEN 
         IF (jogadorDaVez == 1) THEN
            DECK1 := DECK1 \/ {mm};
@@ -49,8 +49,8 @@ comprarDoMonte =
         descartar();
     END;
    
-comprarDoMonte(jj) =
-    PRE ll : LIXEIRA
+comprarDaLixeira =
+    ANY ll WHERE ll : LIXEIRA
     THEN 
         IF (jogadorDaVez == 1) THEN
            DECK1 := DECK1 \/ {ll};
@@ -62,9 +62,38 @@ comprarDoMonte(jj) =
         descartar();
     END;
    
-abaixarTrinca =
-
-descartar(jj) = 
+abaixarTrinca = 
+    IF (jogadorDaVez == 1) THEN
+        SELECT c1: DECK1, c2 : DECK1; c3 : DECK1 THEN
+            IF (verificaTrinca({c1, c2, c3}) == TRUE) THEN
+                DECK1 := DECK1 / {c1, c2, c3};
+                trincasJogador1 := trincasJogador1 + 1;
+            END;
+            jogadorDaVez := 2;
+         END; 
+     ELSE
+         SELECT c1: DECK2, c2 : DECK2; c3 : DECK2 THEN
+             IF (verificaTrinca({c1,c2,c3}) == TRUE) THEN
+                DECK2 := DECK2 / {c1, c2, c3};
+                trincasJogador2 := trincasJogador2 + 1;
+             END;
+             jogadorDaVez := 1;
+          END;
+     END;
+     
+vv <-- verificarTrinca(tt) = 
+    PRE tt : POW BARALHO
+    THEN
+        IF (tt : TRINCAS) THEN
+            vv := TRUE;
+        ELSE
+            vv:= FALSE;
+        END;
+    END;
+        
+        
+ 
+descartar = 
     PRE ((card(DECK1) == 10 || card(DECK2) == 10) 
         || (card(DECK1) == 7 || card(DECK2) == 7)
         || (card(DECK1) == 4 || card(DECK2) == 4))
