@@ -4,13 +4,23 @@
  */
 MACHINE PiffPaff
     
-SETS BARALHO = {1..108}; DECK1 <: BARALHO; TRINCAS <: POW BARALHO; DECK2 <: BARALHO; MONTE <: BARALHO; LIXEIRA <: BARALHO;  
+SETS BARALHO; DECK1; TRINCAS; DECK2; MONTE; LIXEIRA;  
 
-CONSTANTS PAUS <: BARALHO; COPAS <: BARALHO; OUROS <: BARALHO; ESPADAS <: BARALHO;
+CONSTANTS PAUS; COPAS; OUROS; ESPADAS;
 
 VARIABLES jogadorDaVez ,trincasJogador1, trincasJogador2;
     
-INVARIANT ((card(DECK1) == 0 & trincasJogador1 == 3)
+INVARIANT BARALHO = 1..108
+    & DECK1 <: BARALHO
+    & DECK2 <: BARALHO
+    & TRINCAS <: POW BARALHO
+    & MONTE <: BARALHO
+    & LIXEIRA <: BARALHO
+    & PAUS <: BARALHO
+    & COPAS <: BARALHO
+    & OUROS <: BARALHO
+    & ESPADAS <: BARALHO
+    & ((card(DECK1) == 0 & trincasJogador1 == 3)
     || (card(DECK1) == 3 & trincasJogador1 == 2)
     || (card(DECK1) == 6 & trincasJogador1 == 1)
     || (card(DECK1) == 9 & trincasJogador1 == 0))
