@@ -43,7 +43,7 @@ INITIALISATION
     
 OPERATIONS
 
-descartar = 
+/*descartar = 
     PRE (jogadorDaVez = 1 & (card(DECK1) = 10 or card(DECK1) = 7 or card(DECK1) = 4)) or (jogadorDaVez = 2 & (card(DECK2) = 10 or card(DECK2) = 7 or card(DECK2) = 4)) 
     THEN
         IF (jogadorDaVez = 1) THEN
@@ -55,7 +55,7 @@ descartar =
                 LIXEIRA := LIXEIRA \/ {dd} || DECK1 := DECK1 / {dd};
             END
         END
-    END;
+    END;*/
 
 comprarDoMonte =
     ANY mm WHERE mm : MONTE    
