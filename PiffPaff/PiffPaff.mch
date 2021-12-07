@@ -4,78 +4,110 @@
  */
 MACHINE PiffPaff
     
-SETS BARALHO = {1..108}; DECK1 <: BARALHO ; DECK2 <: BARALHO; MONTE <: BARALHO; LIXEIRA <: BARALHO;  
+CONSTANTS BARALHO; TRINCAS; PAUS; COPAS; OUROS; ESPADAS;
 
-CONSTANTS PAUS <: BARALHO; COPAS <: BARALHO; OUROS <: BARALHO; ESPADAS <: BARALHO;
+PROPERTIES BARALHO  <: 1..108
+            & TRINCAS <: POW(BARALHO) //definir conjunto de trincas
+            & PAUS <: BARALHO
+            & COPAS <: BARALHO
+            & OUROS <: BARALHO
+            & ESPADAS <: BARALHO
 
-VARIABLES jogadorDaVez ,trincasJogador1, trincasJogador2;
+VARIABLES deck1, deck2, monte, lixeira, jogadorDaVez ,trincasJogador1, trincasJogador2;
     
-INVARIANT ((card(DECK1) == 0 & trincasJogador1 == 3)
-    || (card(DECK1) == 3 & trincasJogador1 == 2)
-    || (card(DECK1) == 6 & trincasJogador1 == 1)
-    || (card(DECK1) == 9 & trincasJogador1 == 0))
-    || ((card(DECK2) == 0 & trincasJogador2 == 3)
-    || (card(DECK2) == 3 & trincasJogador2 == 2)
-    || (card(DECK2) == 6 & trincasJogador2 == 1)
-    || (card(DECK2) == 9 & trincasJogador2 == 0))
-    & not((card(DECK1) == 0 & card(DECK2) == 0))
-    & DECK1 /\ DECK2 = {}
-    & DECK1 /\ MONTE = {}
-    & DECK1 /\ LIXEIRA = {}
-    & DECK2 /\ MONTE = {}
-    & DECK2 /\ LIXEIRA = {}
+INVARIANT deck1 <: BARALHO & deck2 <: BARALHO
+    & not((card(deck1) == 0 & card(deck2) == 0))
+    & card(monte) < card(baralho) - 2*9 // baralho menos os 2 decks
+    & card(lixeira) < card(baralho) - 2*9 // baralho menos os 2 decks
+    & trincasJogador1 : NATURAL & trincasJogador1 >= 0 & trincasJogador1 <= 3
+    & trincasJogador2 : NATURAL & trincasJogador2 >= 0 & trincasJogador2 <= 3
+    & jogadorDaVez : NATURAL & (jogadorDaVez = 1 or jogadorDaVez = 2)
+    & not(trincasJogador1 = 0 & trincasJogador2 = 0)
+    & deck1 /\ deck2 = {}
+    & deck1 /\ monte = {}
+    & deck1 /\ lixeira = {}
+    & deck2 /\ monte = {}
+    & deck2 /\ lixeira = {}
     
 INITIALISATION 
     trincasJogador1 := 0 ||
     trincasJogador2 := 0 ||
-    DECK1 := {22, 3, 9, 10, 55, 92, 7, 108, 4} ||
-    DECK2 := {57, 60, 100, 2, 93, 30, 40, 89, 5} ||
-    MONTE := BARALHO / (DECK1 \/ DECK2) ||
-    LIXEIRA := {} ||
+    deck1 := {22, 3, 9, 10, 55, 92, 7, 108, 4} ||
+    deck2 := {57, 60, 100, 2, 93, 30, 40, 89, 5} ||
+    monte := BARALHO / (deck1 \/ deck2) ||
+    lixeira := {} ||
     jogadorDaVez := 0
     
 OPERATIONS
 
-comprarDoMonte =
-    PRE mm : MONTE
-    THEN 
-        IF (jogadorDaVez == 1) THEN
-           DECK1 := DECK1 \/ {mm};
-           jogadorDaVez := 2;
-        ELSE
-           DECK2 := DECK2 \/ {mm};
-           jogadorDaVez := 1;
-        END;
-        descartar();
+comprarDomonte =
+    PRE card(monte) > 0
+    THEN
+        IF (jogadorDaVez = 1) THEN
+            ANY dd WHERE dd : deck1 THEN
+                monte := monte \/ {dd} || deck1 := deck1 / {dd};
+            END
+        ELSE 
+            ANY dd WHERE dd : deck2 THEN
+                monte := monte \/ {dd} || deck1 := deck1 / {dd};
+            END
+        END
     END;
    
-comprarDoMonte(jj) =
-    PRE ll : LIXEIRA
-    THEN 
-        IF (jogadorDaVez == 1) THEN
-           DECK1 := DECK1 \/ {ll};
-           jogadorDaVez := 2;
-        ELSE
-           DECK2 := DECK2 \/ {ll};
-           jogadorDaVez := 1;
-        END;
-        descartar();
+comprarDaLixeira =
+    PRE card(lixeira) > 0
+    THEN
+        IF (jogadorDaVez = 1) THEN
+            ANY dd WHERE dd : deck1 THEN
+                lixeira := lixeira \/ {dd} || deck2 := deck2 / {dd};
+            END
+        ELSE 
+            ANY dd WHERE dd : deck2 THEN
+                lixeira := lixeira \/ {dd} || deck2 := deck2 / {dd};
+            END
+        END
     END;
    
-abaixarTrinca =
+abaixarTrinca = 
+    PRE (jogadorDaVez = 1 & trincasJogador1 > 0) or (jogadorDaVez = 2 & trincasJogador2 > 0)
+    THEN
+        IF (jogadorDaVez = 1) THEN
+            SELECT c1: deck1 THEN
+                SELECT c2 : deck1 THEN
+                    SELECT c3 : deck1 THEN
+                        IF {c1, c2, c3} : TRINCAS) THEN
+                            deck1 := deck1 / {c1, c2, c3} || trincasJogador1 := trincasJogador1 + 1
+                        END
+                        jogadorDaVez := 2
+                    END
+                END
+            END
+        ELSE
+            SELECT c1: deck2 THEN
+                SELECT c2 : deck2 THEN
+                    SELECT c3 : deck2 THEN
+                        IF {c1, c2, c3} : TRINCAS) THEN
+                            deck2 := deck2 / {c1, c2, c3} || trincasJogador1 := trincasJogador1 + 1
+                        END
+                        jogadorDaVez := 1
+                    END
+                END
+            END
+        END    
+    END; 
 
 descartar(jj) = 
-    PRE ((card(DECK1) == 10 || card(DECK2) == 10) 
-        || (card(DECK1) == 7 || card(DECK2) == 7)
-        || (card(DECK1) == 4 || card(DECK2) == 4))
+    PRE ((card(deck1) == 10 || card(deck2) == 10) 
+        || (card(deck1) == 7 || card(deck2) == 7)
+        || (card(deck1) == 4 || card(deck2) == 4))
     IF (jogadorDaVez == 1) THEN
-        CHOICE dd : DECK1
-            LIXEIRA := LIXEIRA \/ {dd};
-            DECK1 := DECK1 / {dd};
+        CHOICE dd : deck1
+            lixeira := lixeira \/ {dd};
+            deck1 := deck1 / {dd};
     ELSE 
-        CHOICE dd : DECK2
-            LIXEIRA := LIXEIRA \/ {dd};
-            DECK1 := DECK1 / {dd};
+        CHOICE dd : deck2
+            lixeira := lixeira \/ {dd};
+            deck1 := deck1 / {dd};
     END;
     
 passarAVez = 
