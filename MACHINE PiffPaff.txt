@@ -1,0 +1,142 @@
+MACHINE           PiffPaff
+    
+SETS              BARALHO; TRINCAS
+
+PROPERTIES        BARALHO:FIN(BARALHO)
+                 // & TRINCAS : POW(BARALHO)
+
+VARIABLES         deck1, deck2, monte, lixeira, jogadorDaVez, vencedor, lock
+
+INVARIANT         deck1 <: BARALHO 
+                  & deck2 <: BARALHO
+                  & monte <: BARALHO
+                  & lixeira <: BARALHO
+                  & lixeira:FIN(lixeira)
+                  & monte:FIN(monte)
+                  & jogadorDaVez : NATURAL & (jogadorDaVez = 1 or jogadorDaVez = 2)
+                  & card(lixeira) <= 108
+                  & card(monte) <= 108
+                  & vencedor : {0, 1, 2}
+                  & lock : BOOL
+                  & card(deck1) : {0,1,3,4,6,7,9,10}
+                  & deck1 /\ deck2 = {}
+                  & deck1 /\ monte = {}
+                  & deck1 /\ lixeira = {}
+                  & deck2 /\ monte = {} 
+                  
+                  
+INITIALISATION    deck1 := {} 
+                  || deck2 := {}
+                  || monte := {}
+                  || lixeira := {}
+                  || jogadorDaVez := 1
+                  || vencedor := 0
+                  || lock := FALSE
+
+
+OPERATIONS
+
+comprarDoMonte =
+    PRE card(monte) > 0 & lock = FALSE 
+    THEN
+        IF (jogadorDaVez = 1) THEN
+            ANY dd WHERE dd : deck1 THEN
+                monte := monte - {dd} ||
+                deck1 := deck1 \/ {dd} ||
+                lock := TRUE
+            END
+        ELSE 
+            ANY dd WHERE dd : deck2 THEN
+                monte := monte - {dd} ||
+                deck2 := deck1 \/ {dd} ||
+                lock := TRUE
+            END
+        END
+    END;
+    
+    comprarDaLixeira =
+    PRE card(lixeira) > 0 & lock = FALSE
+    THEN
+        IF (jogadorDaVez = 1) THEN
+            ANY dd WHERE dd : deck1 THEN
+                lixeira := lixeira - {dd} ||
+                deck1 := deck1 \/ {dd} ||
+                lock := TRUE
+            END
+        ELSE 
+            ANY dd WHERE dd : deck2 THEN
+                lixeira := lixeira - {dd} ||
+                deck2 := deck2 \/ {dd} ||
+                lock := TRUE
+            END
+        END
+    END;
+   
+
+/*abaixarTrinca = 
+    //PRE TRUE
+    //THEN
+        IF (jogadorDaVez = 1) THEN
+            SELECT c1: deck1 THEN
+                SELECT c2 : deck1 THEN
+                    SELECT c3 : deck1 THEN
+                        IF ({c1, c2, c3} : TRINCAS) THEN
+                            deck1 := deck1 / {c1, c2, c3} || jogadorDaVez := 2 ||
+                            IF(card(deck1) = 0) THEN
+                                vencedor := 1
+                            END
+                        END
+                        
+                    END
+                END
+            END
+        ELSE
+            SELECT c1: deck2 THEN
+                SELECT c2 : deck2 THEN
+                    SELECT c3 : deck2 THEN
+                        IF ({c1, c2, c3} : TRINCAS) THEN
+                            deck2 := deck2 - {c1, c2, c3} || jogadorDaVez := 1 ||
+                            IF(card(deck2) = 0) THEN
+                                vencedor := 2
+                            END
+                        END
+                        
+                    END
+                END
+            END
+       // END    
+    END; 
+*/
+
+descartar = 
+    PRE lock = TRUE
+    THEN
+        IF (jogadorDaVez = 1) THEN
+            ANY dd WHERE dd : deck1 THEN
+                lixeira := lixeira \/ {dd} ||
+                deck1 := deck1 - {dd} || 
+                lock := FALSE ||
+                jogadorDaVez := 2
+             END
+    
+        ELSE 
+            ANY dd WHERE dd : deck2 THEN
+                lixeira := lixeira \/ {dd} ||
+                deck2 := deck2 - {dd} || 
+                lock := FALSE ||
+                jogadorDaVez := 1
+             END
+        END
+    END;
+    
+passarAVez = 
+    PRE lock = FALSE
+    THEN
+        IF (jogadorDaVez = 1) THEN
+            jogadorDaVez := 2
+        ELSE
+            jogadorDaVez := 1
+        END
+    END
+
+END
