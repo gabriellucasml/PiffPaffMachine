@@ -1,11 +1,13 @@
 MACHINE           PiffPaff
     
-SETS              BARALHO; TRINCAS
+SETS              BARALHO
+    
+CONSTANTS         TRINCAS
 
 PROPERTIES        BARALHO:FIN(BARALHO)
-                 // & TRINCAS : POW(BARALHO)
+                  & TRINCAS <: POW(BARALHO)
 
-VARIABLES         deck1, deck2, monte, lixeira, jogadorDaVez, vencedor, lock
+VARIABLES         deck1, deck2, monte, lixeira, jogadorDaVez, vencedor, lock, pM, pL, num, pD1, pD2
 
 INVARIANT         deck1 <: BARALHO 
                   & deck2 <: BARALHO
@@ -22,7 +24,12 @@ INVARIANT         deck1 <: BARALHO
                   & deck1 /\ deck2 = {}
                   & deck1 /\ monte = {}
                   & deck1 /\ lixeira = {}
-                  & deck2 /\ monte = {} 
+                  & deck2 /\ monte = {}
+                  & num = {1}
+                  & pM : num --> monte
+                  & pL : num --> monte
+                  & pD1 : NAT --> deck1
+                  & pD2 : NAT --> deck2
                   
                   
 INITIALISATION    deck1 := {} 
@@ -32,110 +39,98 @@ INITIALISATION    deck1 := {}
                   || jogadorDaVez := 1
                   || vencedor := 0
                   || lock := FALSE
+                  || num := {1}
+                  || pM :: num --> monte
+                  || pL :: num --> lixeira
+                  || pD1 :: NAT --> deck1
+                  || pD2 :: NAT --> deck2
+                  
 
 
 OPERATIONS
 
-comprarDoMonte =
-    PRE card(monte) > 0 & lock = FALSE 
+mm <-- comprarDoMonte =
+    PRE card(monte) > 0 & lock = FALSE & mm : monte
     THEN
-        IF (jogadorDaVez = 1) THEN
-            ANY dd WHERE dd : deck1 THEN
-                monte := monte - {dd} ||
-                deck1 := deck1 \/ {dd} ||
-                lock := TRUE
-            END
+        IF (jogadorDaVez = 1) THEN      
+            mm := pM(1) ||
+            monte := monte - {mm} ||
+            deck1 := deck1 \/ {mm} ||
+            lock := TRUE                     
         ELSE 
-            ANY dd WHERE dd : deck2 THEN
-                monte := monte - {dd} ||
-                deck2 := deck1 \/ {dd} ||
-                lock := TRUE
-            END
+            mm := pM(1) ||
+            monte := monte - {mm} ||
+            deck2 := deck2 \/ {mm} ||
+            lock := TRUE 
         END
     END;
     
-    comprarDaLixeira =
-    PRE card(lixeira) > 0 & lock = FALSE
+ll <-- comprarDaLixeira =
+    PRE card(lixeira) > 0 & lock = FALSE & ll : lixeira
     THEN
         IF (jogadorDaVez = 1) THEN
-            ANY dd WHERE dd : deck1 THEN
-                lixeira := lixeira - {dd} ||
-                deck1 := deck1 \/ {dd} ||
-                lock := TRUE
-            END
+            ll := pL(1) || 
+            lixeira := lixeira - {ll} ||
+            deck1 := deck1 \/ {ll} ||
+            lock := TRUE
         ELSE 
-            ANY dd WHERE dd : deck2 THEN
-                lixeira := lixeira - {dd} ||
-                deck2 := deck2 \/ {dd} ||
-                lock := TRUE
-            END
+            ll := pL(1) ||
+            lixeira := lixeira - {ll} ||
+            deck2 := deck2 \/ {ll} ||
+            lock := TRUE
         END
     END;
    
 
-/*abaixarTrinca = 
-    //PRE TRUE
-    //THEN
+dd <-- abaixarTrinca(c1, c2, c3) = 
+    PRE c1 : NAT & c2 : NAT & c3 : NAT & c1 /= c2 & c2 /= c3 & c1 /= c3 & dd <: BARALHO
+    THEN
         IF (jogadorDaVez = 1) THEN
-            SELECT c1: deck1 THEN
-                SELECT c2 : deck1 THEN
-                    SELECT c3 : deck1 THEN
-                        IF ({c1, c2, c3} : TRINCAS) THEN
-                            deck1 := deck1 / {c1, c2, c3} || jogadorDaVez := 2 ||
-                            IF(card(deck1) = 0) THEN
-                                vencedor := 1
-                            END
-                        END
-                        
-                    END
+            dd := {pD1(c1)} \/ {pD1(c2)} \/ {pD1(c3)} ||      
+            IF (dd : TRINCAS) THEN
+                deck1 := deck1 - dd || jogadorDaVez := 2 ||
+                IF(card(deck1) = 0) THEN
+                    vencedor := 1
                 END
             END
         ELSE
-            SELECT c1: deck2 THEN
-                SELECT c2 : deck2 THEN
-                    SELECT c3 : deck2 THEN
-                        IF ({c1, c2, c3} : TRINCAS) THEN
-                            deck2 := deck2 - {c1, c2, c3} || jogadorDaVez := 1 ||
-                            IF(card(deck2) = 0) THEN
-                                vencedor := 2
-                            END
-                        END
-                        
-                    END
+            dd :=  {pD2(c1)} \/ {pD2(c2)} \/ {pD2(c3)} ||      
+            IF (dd : TRINCAS) THEN
+                deck2 := deck2 - dd || jogadorDaVez := 2 ||
+                IF(card(deck1) = 0) THEN
+                    vencedor := 1
                 END
             END
-       // END    
+        END    
     END; 
-*/
 
-descartar = 
-    PRE lock = TRUE
+
+dd <-- descartar(cc) = 
+    PRE lock = TRUE & dd : BARALHO & cc : NAT & cc >= 1 & cc <= 9
     THEN
         IF (jogadorDaVez = 1) THEN
-            ANY dd WHERE dd : deck1 THEN
-                lixeira := lixeira \/ {dd} ||
-                deck1 := deck1 - {dd} || 
-                lock := FALSE ||
-                jogadorDaVez := 2
-             END
-    
+            dd := pD1(cc) ||
+            lixeira := lixeira \/ {dd} ||
+            deck1 := deck1 - {dd} || 
+            lock := FALSE ||
+            jogadorDaVez := 2
+  
         ELSE 
-            ANY dd WHERE dd : deck2 THEN
-                lixeira := lixeira \/ {dd} ||
-                deck2 := deck2 - {dd} || 
-                lock := FALSE ||
-                jogadorDaVez := 1
-             END
+            dd := pD2(cc) ||
+            lixeira := lixeira \/ {dd} ||
+            deck2 := deck2 - {dd} || 
+            lock := FALSE ||
+            jogadorDaVez := 1
         END
     END;
     
-passarAVez = 
-    PRE lock = FALSE
+jj <-- passarAVez = 
+    PRE lock = FALSE & jj : NAT
     THEN
         IF (jogadorDaVez = 1) THEN
-            jogadorDaVez := 2
+            jj := 2 || jogadorDaVez := 2
         ELSE
-            jogadorDaVez := 1
+            jj := 1 || jogadorDaVez := 1
         END
     END
 
