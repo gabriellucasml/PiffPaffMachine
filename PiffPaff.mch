@@ -1,17 +1,29 @@
-MACHINE           PiffPaff
+/* PiffPaff
+ * Author: marti
+ * Creation date: 02/02/2022
+ */
+MACHINE           PiffPaff         
     
-SETS              BARALHO
-    
-CONSTANTS         TRINCAS
+CONSTANTS         BARALHO, TRINCAS, ESPADAS, PAUS, OUROS, COPAS
 
-PROPERTIES        BARALHO:FIN(BARALHO)
+PROPERTIES        BARALHO  = 0..103
                   & TRINCAS <: POW(BARALHO)
+                  & ESPADAS <: BARALHO
+                  & ESPADAS = 0..25
+                  & PAUS <: BARALHO
+                  & PAUS <: 26..51
+                  & OUROS <: BARALHO
+                  & OUROS = 52..77
+                  & COPAS <: BARALHO
+                  & COPAS = 78..103
 
-VARIABLES         deck1, deck2, monte, lixeira, jogadorDaVez, vencedor, lock, pM, pL, num, pD1, pD2
+VARIABLES         deck1, deck2, monte, lixeira, mesa, jogadorDaVez, vencedor, lock, pM, pL, num, pD1, pD2
 
 INVARIANT         deck1 <: BARALHO 
                   & deck2 <: BARALHO
                   & monte <: BARALHO
+                  & mesa <: BARALHO
+                  & mesa:FIN(mesa)
                   & lixeira <: BARALHO
                   & lixeira:FIN(lixeira)
                   & monte:FIN(monte)
@@ -30,12 +42,40 @@ INVARIANT         deck1 <: BARALHO
                   & pL : num --> monte
                   & pD1 : NAT --> deck1
                   & pD2 : NAT --> deck2
+                  & !(xx,yy,zz).((xx : NAT & yy : NAT & zz: NAT & {xx, yy, zz} : TRINCAS) => 
+                          (xx mod 13 = yy mod 13 
+                           & xx mod 13 = zz mod 13 
+                           & yy mod 13 = zz mod 13 
+                           & (not(xx : ESPADAS & yy : ESPADAS))
+                           & (not(xx : ESPADAS & zz : ESPADAS))
+                           & (not(yy : ESPADAS & zz : ESPADAS))
+                           & (not(xx : PAUS & yy : PAUS))
+                           & (not(xx : PAUS & zz : PAUS))
+                           & (not(yy : PAUS & zz : PAUS))
+                           & (not(xx : OUROS & yy : OUROS))
+                           & (not(xx : OUROS & zz : OUROS))
+                           & (not(yy : OUROS & zz : OUROS))
+                           & (not(xx : COPAS & yy : COPAS))
+                           & (not(xx : COPAS & zz : COPAS))
+                           & (not(yy : COPAS & zz : COPAS))
+                          ) or ((((xx mod 13) + 1 = yy mod 13  & (yy mod 13) + 1 = zz mod 13) or // x < y < z
+                                ((xx mod 13) + 1 = zz mod 13  & (zz mod 13) + 1 = yy mod 13) or // x < z < y
+                                ((yy mod 13) + 1 = xx mod 13  & (xx mod 13) + 1 = zz mod 13) or // y < x < z
+                                ((yy mod 13) + 1 = zz mod 13  & (zz mod 13) + 1 = xx mod 13) or // y < z < x
+                                ((zz mod 13) + 1 = xx mod 13  & (xx mod 13) + 1 = yy mod 13) or // z < x < y
+                                ((zz mod 13) + 1 = yy mod 13  & (yy mod 13) + 1 = xx mod 13)) // z < y < x
+                                & ((xx : ESPADAS & yy : ESPADAS & zz : ESPADAS) or
+                                   (xx : PAUS & yy : PAUS & zz : PAUS) or
+                                   (xx : OUROS & yy : OUROS & zz : OUROS) or
+                                   (xx : COPAS & yy : COPAS & zz : COPAS))))
+                                
                   
                   
 INITIALISATION    deck1 := {} 
                   || deck2 := {}
                   || monte := {}
                   || lixeira := {}
+                  || mesa := {}
                   || jogadorDaVez := 1
                   || vencedor := 0
                   || lock := FALSE
@@ -135,3 +175,4 @@ jj <-- passarAVez =
     END
 
 END
+
