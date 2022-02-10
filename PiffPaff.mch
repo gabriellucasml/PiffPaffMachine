@@ -1,7 +1,3 @@
-/* PiffPaff
- * Author: marti
- * Creation date: 02/02/2022
- */
 MACHINE           PiffPaff         
     
 CONSTANTS         BARALHO, TRINCAS, ESPADAS, PAUS, OUROS, COPAS
@@ -80,12 +76,10 @@ INITIALISATION    deck1 := {}
                   || vencedor := 0
                   || lock := FALSE
                   || num := {1}
-                  || pM :: num --> monte
-                  || pL :: num --> lixeira
-                  || pD1 :: NAT --> deck1
-                  || pD2 :: NAT --> deck2
-                  
-
+                  || pM := {1}*monte
+                  || pL := {1}*lixeira
+                  || pD1 := NAT * deck1
+                  || pD2 := NAT * deck2
 
 OPERATIONS
 
