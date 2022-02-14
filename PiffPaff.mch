@@ -1,7 +1,3 @@
-/* PiffPaff
- * Author: marti
- * Creation date: 02/02/2022
- */
 MACHINE           PiffPaff         
 
 SETS              BARALHO
