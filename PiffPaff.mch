@@ -10,7 +10,8 @@ PROPERTIES        espadas : 0..25   >-> BARALHO
                   & copas : 78..103 >-> BARALHO
                   & vazio : {-1}    >-> BARALHO
                   & card(BARALHO) = 105
-                  & trincas : POW(BARALHO)
+                  & trincas <: POW(BARALHO)
+                  
 
 VARIABLES         deck1, deck2, monte, lixeira, mesa, jogadorDaVez, vencedor, lock
 
