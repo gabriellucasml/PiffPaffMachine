@@ -54,11 +54,11 @@ INVARIANT         deck1 :   -1..8 --> BARALHO
                   & vencedor : {0, 1, 2}
                   & lock : BOOL   
                                                   
-INITIALISATION    deck1 := {0,1,2,3,4,5,6,7,8,9} * BARALHO
-                  || deck2 := {0,1,2,3,4,5,6,7,8,9} * BARALHO
-                  || monte := {0,1,2,3,4,5,6,7,8,9} * BARALHO
-                  || lixeira := {0,1,2,3,4,5,6,7,8,9} * BARALHO
-                  || mesa := {0,1,2,3,4,5,6,7,8,9} * BARALHO
+INITIALISATION    deck1 := {-1,0,1,2,3,4,5,6,7,8} * BARALHO
+                  || deck2 := {-1,0,1,2,3,4,5,6,7,8} * BARALHO
+                  || monte := {-1,0,1,2,3,4,5,6,7,8,9} * BARALHO
+                  || lixeira := {-1,0,1,2,3,4,5,6,7,8,9} * BARALHO
+                  || mesa := {-1,0,1,2,3,4,5,6,7,8,9} * BARALHO
                   || jogadorDaVez := 1
                   || vencedor := 0
                   || lock := FALSE
