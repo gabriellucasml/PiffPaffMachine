@@ -1,0 +1,136 @@
+IMPLEMENTATION PiffPaff_i
+REFINES PiffPaff   
+
+CONCRETE_VARIABLES
+    deck1_i,
+    deck2_i,
+    monte_i,
+    lixeira_i,
+    mesa_i,
+    jogadorDaVez_i,
+    vencedor_i,
+    lock_i
+
+INVARIANT
+    deck1_i = deck1
+    & deck2_i = deck2
+    & monte_i = monte
+    & lixeira_i = lixeira
+    & mesa_i = mesa
+    & jogadorDaVez_i : {1,2}
+    & jogadorDaVez_i = jogadorDaVez
+    & vencedor_i = vencedor
+    & lock_i = lock
+
+INITIALISATION
+    deck1_i := {}
+    
+
+
+OPERATIONS
+comprarDoMonte(cc) = 
+    BEGIN
+        IF(card(monte_i|>>{cartas(-1)}) > 0) THEN
+            IF(lock = TRUE) THEN
+                IF(jogadorDaVez_i = 1) THEN
+                    deck1_i(-1) := monte_i(cc);
+                ELSE
+                    deck2_i(-1) := monte_i(cc);
+                END;
+                monte_i(cc) := cartas(-1);
+                lock_i := TRUE;
+            END;
+        END;
+    END;
+    
+comprarDoLixeira(cc) = 
+    BEGIN
+        IF(card(lixeira_i|>>{cartas(-1)}) > 0) THEN
+            IF lock_i = TRUE THEN
+                IF(jogadorDaVez_i = 1) THEN
+                    deck1_i(-1) := lixeira_i(cc)
+                ELSE
+                    deck2_i(-1) := lixeira_i(cc)
+                END;
+                lixeira_i := lixeira_i <+ {0 |-> lixeira_i(card(lixeira_i|>>{cartas(-1)})), card(lixeira_i|>>{cartas(-1)}) |-> cartas(-1)};
+                lock_i := TRUE;
+            END;
+        END;
+    END;
+
+abaixarTrinca(c1, c2, c3) = 
+    BEGIN
+    IF c1 /= c2 & c2 /= c3 & c1 /= c3 &
+        c1 < 8 & c2 < 8 & c3 < 8 &
+        c1 >= 0 & c2 >= 0 & c3 >= 0 THEN
+            IF (jogadorDaVez_i = 1) THEN
+                IF ({query(deck1_i(c1)),query(deck1_i(c2)),query(deck1_i(c3))} : trincas) THEN
+                    mesa_i := mesa_i <+ {card(mesa_i |>> {cartas(-1)}) |-> deck1_i(c1), 
+                                (card(mesa_i |>> {cartas(-1)}) + 1) |-> deck1_i(c2),
+                                (card(mesa_i |>> {cartas(-1)}) + 2) |-> deck1_i(c3)};
+                    deck1_i := deck1_i <+ {c1 |-> deck1_i(-1), c2 |-> deck1_i(-1), c3 |-> deck1_i(-1)};
+                    jogadorDaVez_i := 2;
+                    IF(card(deck1_i |>>{deck1_i(-1)}) = 0) THEN
+                        vencedor_i := 1;
+                    END;
+                END;
+            ELSE      
+                IF ({query(deck2_i(c1)),query(deck2_i(c2)),query(deck2_i(c3))} : trincas) THEN
+                    mesa_i := mesa_i <+ {card(mesa_i |>> {cartas(-1)}) |-> deck2_i(c1), 
+                                (card(mesa_i |>> {cartas(-1)}) + 1) |-> deck2_i(c2),
+                                (card(mesa_i |>> {cartas(-1)}) + 2) |-> deck2_i(c3)}; 
+                    deck2_i := deck2_i <+ {c1 |-> deck2_i(-1), c2 |-> deck2_i(-1), c3 |-> deck2_i(-1)};
+                    jogadorDaVez_i := 2;
+                    IF(card(deck2_i |>>{deck2_i(-1)}) = 0) THEN
+                        vencedor_i := 2;
+                    END;
+                END;
+            END    
+        END
+    END
+
+descartar(cc) =
+    BEGIN
+        IF lock_i = TRUE THEN
+            IF cc : 0..9 THEN
+                IF (jogadorDaVez_i = 1) THEN
+                    IF(card(lixeira_i |>>{cartas(-1)}) > 0) THEN
+                        lixeira_i := lixeira_i <+ {card(lixeira_i |>>{cartas(-1)}) |-> lixeira_i(0), 0 |-> deck1_i(cc)};
+                    ELSE
+                        lixeira_i(card(lixeira_i |>>{cartas(-1)})) := deck1_i(cc);
+                    END;
+                    deck1_i(cc) := cartas(-1); 
+                    lock_i := FALSE ;
+                    jogadorDaVez_i := 2;
+                ELSE 
+                    IF(card(lixeira_i |>>{cartas(-1)}) > 0) THEN
+                        lixeira_i := lixeira_i <+ {card(lixeira_i |>>{cartas(-1)}) |-> lixeira_i(0), 0 |-> deck2(cc)};
+                    ELSE
+                        lixeira_i(card(lixeira_i |>>{cartas(-1)})) := deck2_i(cc);
+                    END;
+                    deck2_i(cc) := cartas(-1); 
+                    lock_i := FALSE;
+                    jogadorDaVez_i := 1;
+                END;
+            END;
+        END
+    END
+    
+passarAVez = 
+    BEGIN
+        IF lock_i = FALSE THEN
+            IF (jogadorDaVez_i = 1) THEN
+                jogadorDaVez_i := 2;
+            ELSE
+                jogadorDaVez_i := 1;
+            END;
+        END;
+    END;
+
+jj<-- jogadorQuery =
+    jj := jogadorDaVez;
+
+ll <-- topoLixeira =
+    ll := lixeira(0);
+
+END
